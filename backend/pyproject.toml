@@ -18,6 +18,10 @@ dependencies = [
     "langgraph-api",
     "fastapi",
     "google-genai",
+    "langchain_deepseek",
+    "pandas",
+    "openpyxl",
+    "tabulate"
 ]
 
 

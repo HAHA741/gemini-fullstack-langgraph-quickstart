@@ -31,6 +31,8 @@ from agent.utils import (
     resolve_urls,
 )
 
+from langchain_deepseek import ChatDeepSeek
+
 load_dotenv()
 
 if os.getenv("GEMINI_API_KEY") is None:
@@ -55,7 +57,7 @@ def generate_query(state: OverallState, config: RunnableConfig) -> QueryGenerati
         Dictionary with state update, including search_query key containing the generated queries
     """
     configurable = Configuration.from_runnable_config(config)
-
+    print(state,"agentState")
     # check for custom initial search query count
     if state.get("initial_search_query_count") is None:
         state["initial_search_query_count"] = configurable.number_of_initial_queries

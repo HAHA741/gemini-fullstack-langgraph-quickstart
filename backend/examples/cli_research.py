@@ -31,6 +31,7 @@ def main() -> None:
         "initial_search_query_count": args.initial_queries,
         "max_research_loops": args.max_loops,
         "reasoning_model": args.reasoning_model,
+        "excelPath":"data"
     }
 
     result = graph.invoke(state)

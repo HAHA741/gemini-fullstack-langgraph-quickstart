@@ -5,6 +5,7 @@ import { ProcessedEvent } from "@/components/ActivityTimeline";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { ChatMessagesView } from "@/components/ChatMessagesView";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_SUBTITLE_TEXT, DEFAULT_EXCEL_PATH } from "@/config/defaults";
 
 export default function App() {
   const [processedEventsTimeline, setProcessedEventsTimeline] = useState<
@@ -21,11 +22,13 @@ export default function App() {
     initial_search_query_count: number;
     max_research_loops: number;
     reasoning_model: string;
+    excel_path: string;
+    subtitle_text: string;
   }>({
     apiUrl: import.meta.env.DEV
       ? "http://localhost:2024"
       : "http://localhost:8123",
-    assistantId: "agent",
+    assistantId: "contentAgent",
     messagesKey: "messages",
     onUpdateEvent: (event: any) => {
       let processedEvent: ProcessedEvent | null = null;
@@ -139,6 +142,8 @@ export default function App() {
         initial_search_query_count: initial_search_query_count,
         max_research_loops: max_research_loops,
         reasoning_model: model,
+        excel_path: DEFAULT_EXCEL_PATH,
+        subtitle_text: DEFAULT_SUBTITLE_TEXT,
       });
     },
     [thread]
