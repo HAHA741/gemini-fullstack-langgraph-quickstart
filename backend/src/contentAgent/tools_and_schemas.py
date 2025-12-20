@@ -1,20 +1,45 @@
-from typing import List
+from typing import (List,Optional,Literal)
 from pydantic import BaseModel, Field
 
-class ViewPointStruct(BaseModel):
+
+class InfoUnit(BaseModel):
+    id: int = Field(description="信息单元的顺序编号，按字幕出现顺序递增")
+
     content: str = Field(
-        description="观点的具体内容和表述"
+        default="未知",description="该信息单元的核心内容，接近原字幕但做最小书面化处理"
     )
-    type: str = Field(
-        description="观点分类：结论(最终结论) / 论据(支持证据) / 举例(具体案例) / 推测(推理推断)"
-        )
-    relation: str = Field(
-        description="与前一观点的逻辑关系：并列(同级) / 因果(因果关系) / 递进(递进深化) / 对比(对立对比)"
-    )
-    source: str = Field(
-        description="观点来源、参考文献或数据出处"
-    )
+#      "情节事件","人物行为","冲突转折","背景交代","观点结论","观点解释","举例说明", "推测假设"
+    info_type: str= Field(default="未知",description="该信息在内容结构中的角色,如 情节事件,人物行为,冲突转折,背景交代,观点结论,观点解释,举例说明, 推测假设")
+#   "叙事型",  "逻辑型"
+    structure_type: str= Field(default="未知",description="理解该信息是否依赖时间顺序,如叙事型,逻辑型")
+        # "时间推进","因果", "递进","对比","并列","无明确关系"
+    relation_to_prev:str = Field(default="未知",description="与前一个信息单元的主要关系,如时间推进,因果, 递进,对比,并列,无明确关系")
+#        "陈述","强调","反问","对比","否定","中性"
+    expression_style: str = Field(default="未知",description="字幕中该内容的表达方式,如陈述,强调,反问,对比,否定,中性")
+#        "解说者","引用他人","不明确"
+    source_role: str = Field(default="未知",description="该信息的发出者角色,如解说者,引用他人,不明确")
+#        "明确", "不明确"
+    confidence: str = Field(default="未知",description="字幕中是否对该信息表达了确定性,如明确,不明确")
+
 class ViewPointsStruct(BaseModel):
-    viewpoints: List[ViewPointStruct] = Field(
-        description="按逻辑关系组织的观点集合，每个观点包含内容、类型、关系和来源"
+    core_topic: str = Field(
+        description="视频的核心主题，一句话概括，不解释"
     )
+
+    info_units: List[InfoUnit] = Field(
+        default=[],description="按字幕顺序排列的信息单元列表"
+    )
+
+    narrative_ratio: Optional[float] = Field(
+        description="叙事型信息单元占比，用于判断是否为影视解说",
+        ge=0,
+        le=1
+    )
+
+    logic_ratio: Optional[float] = Field(
+        description="逻辑型信息单元占比，用于判断是否为知识分享",
+        ge=0,
+        le=1
+    )
+
+

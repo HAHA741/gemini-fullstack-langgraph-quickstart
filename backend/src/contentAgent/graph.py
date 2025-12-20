@@ -2,46 +2,71 @@ import os
 from typing import Any
 from langchain_deepseek import ChatDeepSeek
 from langgraph.graph import START, END, StateGraph
-
-from contentAgent.state import OverallState, Viewpoint
+import pysrt
+from pathlib import Path
+import contentAgent
+import time
+from contentAgent.state import OverallState
 from contentAgent.prompts import (
     opinion_extraction_prompt,
     article_generation_prompt,
-    title_generation_prompt
+    title_generation_prompt,
+    story_article_writer,
+    title_generation_prompt2,
+    knowledge_article_writer
 )
-from contentAgent.tools_and_schemas import ViewPointStruct, ViewPointsStruct
+from contentAgent.tools_and_schemas import ViewPointsStruct
 from contentAgent.utils_state import persistence
 
 # 环境变量检查
 if os.getenv("DeepSeek_API_KEY") is None:
     raise ValueError("DeepSeek_API_KEY 环境变量未设置")
 
+def parse_srt(path:str)->str:
+    """解析 SRT 字幕文件，返回纯文本内容"""
+    subtitles = pysrt.open(path, encoding='utf-8')
+    texts = [sub.text.replace('\n', ' ') for sub in subtitles]
+    return ' '.join(texts)
 def analyze_subtitle(state: OverallState) -> OverallState:
     """分析字幕/文本，提取观点结构"""
     try:
         llm = ChatDeepSeek(
             model="deepseek-chat",
             temperature=0,
+            timeout=600,
             api_key=os.getenv("DeepSeek_API_KEY")
         )
+        BASE_DIR = Path(contentAgent.__file__).resolve().parent
+        srt_path = BASE_DIR / "data" / "knowledge.srt"
+        subtitle_text = parse_srt(srt_path)
+        state["subtitle_text"] = subtitle_text
+
         structured_llm = llm.with_structured_output(ViewPointsStruct)
-        prompt = opinion_extraction_prompt.format(transcript=state.get("subtitle_text", ""))
-        result = structured_llm.invoke(prompt)
-        print("✓ 观点分析完成")
-        state["viewpoints"] = result.viewpoints
+        prompt = opinion_extraction_prompt.format(transcript=subtitle_text)
+        print("观点prompt = ",prompt)
+        print("start", time.time())
+        # result = structured_llm.invoke(prompt)
+        result = llm.invoke(prompt)
+        print("end", time.time())
+        print("✓ 观点分析完成",result)
+        state["viewpoints"] = result.content if hasattr(result, 'content') else str(result)
     except Exception as e:
         print(f"✗ 观点分析失败: {str(e)}")
+        # print(result)
+        state["viewpoints"] = result
         state["warnings"] = [f"观点分析出错: {str(e)}"]
+        raise RuntimeError("viewpoints is missing, abort graph")
     return state
 def generate_article(state: OverallState) -> OverallState:
     """根据观点生成文章"""
     try:
         llm = ChatDeepSeek(
             model="deepseek-chat",
-            temperature=0.3,
+            temperature=0.85,
             api_key=os.getenv("DeepSeek_API_KEY")
         )
-        prompt = article_generation_prompt.format(viewpoints=state.get("viewpoints", []))
+        prompt = knowledge_article_writer.format(viewpoints=state.get("viewpoints", []))
+        print("文章prompt = ",prompt)
         result = llm.invoke(prompt)
         print("✓ 文章生成完成")
         state["article"] = result.content if hasattr(result, 'content') else str(result)
@@ -54,10 +79,11 @@ def generate_title(state: OverallState) -> OverallState:
     try:
         llm = ChatDeepSeek(
             model="deepseek-chat",
-            temperature=0.5,
+            temperature=0.85,
             api_key=os.getenv("DeepSeek_API_KEY")
         )
-        prompt = title_generation_prompt.format(article=state.get("article", ""))
+        prompt = title_generation_prompt2.format(article=state.get("article", ""))
+        print("标题prompt = ",prompt)
         result = llm.invoke(prompt)
         print("✓ 标题生成完成")
         # 假设返回的是多个标题，处理为列表

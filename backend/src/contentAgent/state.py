@@ -9,7 +9,7 @@ class Viewpoint(TypedDict):
 class OverallState(TypedDict):
     subtitle_text: str                  # 原始字幕
     core_topic: Optional[str]            # 核心主题
-    viewpoints: Optional[List[Viewpoint]]# 阶段一输出
+    viewpoints: any# 阶段一输出
     article: Optional[str]               # 阶段二输出
     titles: Optional[List[str]]          # 阶段三输出
     warnings: Optional[List[str]]        # 不确定 / 冲突标记

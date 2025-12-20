@@ -31,6 +31,7 @@ export default function App() {
     assistantId: "contentAgent",
     messagesKey: "messages",
     onUpdateEvent: (event: any) => {
+      console.log("Event:", event);
       let processedEvent: ProcessedEvent | null = null;
       if (event.generate_query) {
         processedEvent = {
