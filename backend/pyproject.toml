@@ -22,7 +22,9 @@ dependencies = [
     "pandas",
     "openpyxl",
     "tabulate",
-    "pysrt"
+    "pysrt",
+    "uvicorn[standard]",
+    "python-multipart"
 ]
 
 

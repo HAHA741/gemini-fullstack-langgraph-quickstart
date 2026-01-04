@@ -2,6 +2,7 @@ import os
 from typing import Any
 from langchain_deepseek import ChatDeepSeek
 from langgraph.graph import START, END, StateGraph
+from langchain_core.messages import AIMessage
 import pysrt
 from pathlib import Path
 import contentAgent
@@ -13,7 +14,9 @@ from contentAgent.prompts import (
     title_generation_prompt,
     story_article_writer,
     title_generation_prompt2,
-    knowledge_article_writer
+    knowledge_article_writer,
+    review_article_prompt,
+    comment_generation_prompt
 )
 from contentAgent.tools_and_schemas import ViewPointsStruct
 from contentAgent.utils_state import persistence
@@ -37,7 +40,7 @@ def analyze_subtitle(state: OverallState) -> OverallState:
             api_key=os.getenv("DeepSeek_API_KEY")
         )
         BASE_DIR = Path(contentAgent.__file__).resolve().parent
-        srt_path = BASE_DIR / "data" / "knowledge.srt"
+        srt_path = BASE_DIR / "data" / str(state["srt"])
         subtitle_text = parse_srt(srt_path)
         state["subtitle_text"] = subtitle_text
 
@@ -50,6 +53,7 @@ def analyze_subtitle(state: OverallState) -> OverallState:
         print("end", time.time())
         print("✓ 观点分析完成",result)
         state["viewpoints"] = result.content if hasattr(result, 'content') else str(result)
+        state["messages"] = AIMessage(content=result.content)
     except Exception as e:
         print(f"✗ 观点分析失败: {str(e)}")
         # print(result)
@@ -70,6 +74,7 @@ def generate_article(state: OverallState) -> OverallState:
         result = llm.invoke(prompt)
         print("✓ 文章生成完成")
         state["article"] = result.content if hasattr(result, 'content') else str(result)
+        state["messages"] = AIMessage(content=result.content)
     except Exception as e:
         print(f"✗ 文章生成失败: {str(e)}")
         state["warnings"] = (state.get("warnings", []) or []) + [f"文章生成出错: {str(e)}"]
@@ -89,12 +94,47 @@ def generate_title(state: OverallState) -> OverallState:
         # 假设返回的是多个标题，处理为列表
         titles_text = result.content if hasattr(result, 'content') else str(result)
         state["titles"] = [t.strip() for t in titles_text.split('\n') if t.strip()]
+        state["messages"] = AIMessage(content=result.content)
     except Exception as e:
         print(f"✗ 标题生成失败: {str(e)}")
         state["warnings"] = (state.get("warnings", []) or []) + [f"标题生成出错: {str(e)}"]
     return state
-
-
+def review_article(state:OverallState)->OverallState:
+    """对文章进行审核"""
+    try:
+        llm=ChatDeepSeek(
+            model="deepseek-chat",
+            temperature = 0,
+            api_key=os.getenv("DeepSeek_API_KEY")
+        )
+        prompt = review_article_prompt.format(article=state.get("article", ""))
+        print("审核prompt = ",prompt)
+        result = llm.invoke(prompt)
+        print("✓ 文章审核完成")
+        state["review_result"] = result.content if hasattr(result, 'content') else str(result)
+        state["messages"] = AIMessage(content=result.content)
+    except Exception as e:
+        print(f"✗ 文章审核失败: {str(e)}")
+    return state
+def generate_comment(state: OverallState)-> OverallState:
+    """生成评论"""
+    try:
+        llm = ChatDeepSeek(
+            model="deepseek-chat",
+            temperature=1,
+            api_key=os.getenv("DeepSeek_API_KEY")
+        )
+        prompt = comment_generation_prompt.format(article=state.get("article", ""))
+        print("评论prompt = ",prompt)
+        result = llm.invoke(prompt)
+        print("✓ 评论生成完成")
+    
+        state["comment"] = result.content if hasattr(result, 'content') else str(result)
+        state["messages"] = AIMessage(content=result.content)
+    except Exception as e:
+        print(f"✗ 评论生成失败: {str(e)}")
+        state["warnings"] = (state.get("warnings", []) or []) + [f"评论生成出错: {str(e)}"]
+    return state
 def save_conversation_state(state: OverallState) -> OverallState:
     """保存对话状态到文件"""
     try:
@@ -121,15 +161,19 @@ def build_graph() -> Any:
     builder.add_node("generate_article", generate_article)
     builder.add_node("generate_title", generate_title)
     builder.add_node("save_state", save_conversation_state)
+    builder.add_node("review_article", review_article)
+    builder.add_node("generate_comment", generate_comment)
 
     # 添加边（定义流程）
     builder.add_edge(START, "analyze_subtitle")
     builder.add_edge("analyze_subtitle", "generate_article")
-    builder.add_edge("generate_article", "generate_title")
-    builder.add_edge("generate_title", "save_state")
+    builder.add_edge("generate_article", "review_article")
+    builder.add_edge("review_article", "generate_title")
+    builder.add_edge("generate_title", "generate_comment")
+    builder.add_edge("generate_comment", "save_state")
     builder.add_edge("save_state", END)
 
-    return builder.compile(name="pro-research-content")
+    return builder.compile(name="pro-knowledge-content")
 
 
 # 编译图

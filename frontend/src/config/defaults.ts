@@ -64,3 +64,15 @@ export const DEFAULT_SUBTITLE_TEXT = `1
 
 export const DEFAULT_EXCEL_PATH = "data/demo.xlsx";
 export const DEFAULT_REASONING_MODEL = "deepSeek";
+export interface OverallState {
+  messages: Array<any>; // 消息历史
+  subtitle_text: string;
+  core_topic: string;
+  viewpoints: string;
+  article: string;
+  titles: string;
+  warnings: string;
+  review_result: string;
+  [key: string]: any;
+  comment: string;
+}

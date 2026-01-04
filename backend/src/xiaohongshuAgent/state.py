@@ -1,14 +1,16 @@
 from typing import TypedDict, List, Optional, Annotated
 from langgraph.graph import add_messages
 
-class Viewpoint(TypedDict):
-    content: str
-    type: str            # 结论 / 论据 / 举例 / 推测
-    relation: str        # 并列 / 因果 / 递进 / 对比
-    source: str          # 作者 / 提问者 / 其他
+class ContentState(TypedDict):
+    topics: list[str]          # 候选选题
+    selected_topic: str | None # 人选中的选题
+    article: str | None        # 正文
+    titles: list[str] | None   # 标题候选
+    messages: Annotated[list, add_messages]  # 消息历史
+
 
 class OverallState(TypedDict):
-    messages: Annotated[list, add_messages]  # 消息历史
+
     subtitle_text: str                   # 原始内容
     core_topic: Optional[str]            # 核心主题
     viewpoints: any                      # 知识点输出

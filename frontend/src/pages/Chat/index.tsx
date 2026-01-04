@@ -5,38 +5,16 @@ import { ProcessedEvent } from "@/components/ActivityTimeline";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { ChatMessagesView } from "@/components/ChatMessagesView";
 import { Button } from "@/components/ui/button";
-import {
-  DEFAULT_SUBTITLE_TEXT,
-  DEFAULT_EXCEL_PATH,
-  OverallState,
-} from "@/config/defaults";
-import BaseModel from "./components/BaseModel";
-import ChatConfirm from "./components/ChatConfirm";
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router-dom";
-import Main from "./pages/Main";
-import Chat from "./pages/Chat";
-
-// 1. 创建一个新的子组件，包含所有的聊天逻辑
-// 这里的代码几乎就是你原来的 App 组件内容，但接收 props
-function ChatSession({
-  assistantId,
-  onChangeAssistant,
-}: {
-  assistantId: string;
-  onChangeAssistant: (id: string) => void;
-}) {
+import { OverallState } from "@/config/defaults";
+import BaseModel from "../../components/BaseModel";
+import ChatConfirm from "../../components/ChatConfirm";
+import { useParams } from "react-router-dom";
+const Chat = () => {
+  const { assistantId } = useParams<{ assistantId: string }>();
   const [processedEventsTimeline, setProcessedEventsTimeline] = useState<
     ProcessedEvent[]
   >([]);
-  const [historicalActivities, setHistoricalActivities] = useState<
-    Record<string, ProcessedEvent[]>
-  >([]);
+  const [historicalActivities, setHistoricalActivities] = useState<any>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const hasFinalizeEventOccurredRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -156,98 +134,72 @@ function ChatSession({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <h1 className="text-2xl text-red-400 font-bold">Error</h1>
-          <p className="text-red-400">{JSON.stringify(error)}</p>
-          <Button
-            variant="destructive"
-            onClick={() => window.location.reload()}
-          >
-            Retry
-          </Button>
-        </div>
+      <div className="flex h-screen bg-neutral-800 text-neutral-100 font-sans antialiased">
+        <main className="h-full w-full max-w-4xl mx-auto">
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <h1 className="text-2xl text-red-400 font-bold">Error</h1>
+              <p className="text-red-400">{JSON.stringify(error)}</p>
+              <Button
+                variant="destructive"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
     <>
-      {thread.messages.length === 0 ? (
-        <WelcomeScreen
-          changeAssistant={onChangeAssistant}
-          handleSubmit={handleSubmit}
-          isLoading={thread.isLoading}
-          onCancel={handleCancel}
-        />
-      ) : (
-        <ChatMessagesView
-          messages={thread.messages}
-          isLoading={thread.isLoading}
-          scrollAreaRef={scrollAreaRef}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          liveActivityEvents={processedEventsTimeline}
-          historicalActivities={historicalActivities}
-          // 将外层的 setter 传递给子组件
-          changeAssistant={(val) => {
-            console.log("切换助手：", val);
-            onChangeAssistant(val);
-          }}
-        />
-      )}
-      <BaseModel
-        title="选择话题"
-        visible={visible}
-        onCancel={() => {
-          setVisible(false);
-        }}
-      >
-        <ChatConfirm
-          topics={topics}
-          onConfirm={(topic) => {
-            setVisible(false);
-            thread.submit({
-              ...historyThreadData,
-              selected_topic: topic,
-            });
-          }}
-        />
-      </BaseModel>
+      <div className="flex h-screen bg-neutral-800 text-neutral-100 font-sans antialiased">
+        <main className="h-full w-full max-w-4xl mx-auto">
+          {thread.messages.length === 0 ? (
+            <WelcomeScreen
+              handleSubmit={handleSubmit}
+              isLoading={thread.isLoading}
+              onCancel={handleCancel}
+            />
+          ) : (
+            <ChatMessagesView
+              messages={thread.messages}
+              isLoading={thread.isLoading}
+              scrollAreaRef={scrollAreaRef}
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              liveActivityEvents={processedEventsTimeline}
+              historicalActivities={historicalActivities}
+              // 将外层的 setter 传递给子组件
+              changeAssistant={(val) => {
+                console.log("切换助手：", val);
+              }}
+            />
+          )}
+          <BaseModel
+            title="选择话题"
+            visible={visible}
+            onCancel={() => {
+              setVisible(false);
+            }}
+          >
+            <ChatConfirm
+              topics={topics}
+              onConfirm={(topic) => {
+                setVisible(false);
+                thread.submit({
+                  ...historyThreadData,
+                  selected_topic: topic,
+                });
+              }}
+            />
+          </BaseModel>
+        </main>
+      </div>
     </>
   );
-}
+};
 
-// 2. 主 App 组件变得非常轻量，只负责控制 Key
-export default function App() {
-  // const [assistantId, setAssistantId] = useState("contentAgent");
-
-  return (
-    <>
- 
-        <Routes>
-          <Route path="/app" element={<Main />} />
-          <Route path="/chat/:assistantId" element={<Chat />} />
-        </Routes>
-
-    </>
-
-    // <div className="flex h-screen bg-neutral-800 text-neutral-100 font-sans antialiased">
-    //   <main className="h-full w-full max-w-4xl mx-auto">
-    //     {/* 核心修改点：
-    //         key={assistantId} 告诉 React：
-    //         当 assistantId 变化时，销毁旧的 ChatSession，创建全新的 ChatSession。
-    //         这会强制 useStream 重新执行初始化逻辑。
-    //     */}
-    //     <ChatSession
-    //       key={assistantId}
-    //       assistantId={assistantId}
-    //       onChangeAssistant={(val) => {
-    //         console.log("切换助手：", val);
-    //         setAssistantId(val);
-    //       }}
-    //     />
-    //   </main>
-    // </div>
-  );
-}
+export default Chat;

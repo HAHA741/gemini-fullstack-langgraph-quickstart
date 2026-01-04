@@ -8,12 +8,14 @@ interface WelcomeScreenProps {
   ) => void;
   onCancel: () => void;
   isLoading: boolean;
+  changeAssistant?: (assistantId: string) => void;
 }
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   handleSubmit,
   onCancel,
   isLoading,
+
 }) => (
   <div className="h-full flex flex-col items-center justify-center text-center px-4 flex-1 w-full max-w-3xl mx-auto gap-4">
     <div>

@@ -12,6 +12,7 @@ import {
   ActivityTimeline,
   ProcessedEvent,
 } from "@/components/ActivityTimeline"; // Assuming ActivityTimeline is in the same dir or adjust path
+import ChatConfirm from "./ChatConfirm";
 
 // Markdown component props type from former ReportView
 type MdComponentProps = {
@@ -230,6 +231,7 @@ interface ChatMessagesViewProps {
   onCancel: () => void;
   liveActivityEvents: ProcessedEvent[];
   historicalActivities: Record<string, ProcessedEvent[]>;
+  changeAssistant: (assistantId: string) => void;
 }
 
 export function ChatMessagesView({
@@ -240,6 +242,7 @@ export function ChatMessagesView({
   onCancel,
   liveActivityEvents,
   historicalActivities,
+  changeAssistant,
 }: ChatMessagesViewProps) {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
@@ -250,6 +253,30 @@ export function ChatMessagesView({
       setTimeout(() => setCopiedMessageId(null), 2000); // Reset after 2 seconds
     } catch (err) {
       console.error("Failed to copy text: ", err);
+    }
+  };
+
+  const renderBubble = (message: Message, isLast: boolean) => {
+    switch (message.type) {
+      case "human":
+        return (
+          <HumanMessageBubble message={message} mdComponents={mdComponents} />
+        );
+      case "ai":
+        return (
+          <AiMessageBubble
+            message={message}
+            historicalActivity={historicalActivities[message.id!]}
+            liveActivity={liveActivityEvents}
+            isLastMessage={isLast}
+            isOverallLoading={isLoading}
+            mdComponents={mdComponents}
+            handleCopy={handleCopy}
+            copiedMessageId={copiedMessageId}
+          />
+        );
+      case "custom":
+        return <ChatConfirm topics={message.value} />;
     }
   };
   return (
@@ -265,7 +292,8 @@ export function ChatMessagesView({
                     message.type === "human" ? "justify-end" : ""
                   }`}
                 >
-                  {message.type === "human" ? (
+                  {renderBubble(message, isLast)}
+                  {/* {message.type === "human" ? (
                     <HumanMessageBubble
                       message={message}
                       mdComponents={mdComponents}
@@ -281,7 +309,7 @@ export function ChatMessagesView({
                       handleCopy={handleCopy}
                       copiedMessageId={copiedMessageId}
                     />
-                  )}
+                  )} */}
                 </div>
               </div>
             );
@@ -313,6 +341,7 @@ export function ChatMessagesView({
       </ScrollArea>
       <InputForm
         onSubmit={onSubmit}
+        changeAssistant={changeAssistant}
         isLoading={isLoading}
         onCancel={onCancel}
         hasHistory={messages.length > 0}
