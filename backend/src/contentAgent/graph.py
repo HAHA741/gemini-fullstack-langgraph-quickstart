@@ -144,7 +144,7 @@ def save_conversation_state(state: OverallState) -> OverallState:
         conversation_id = hashlib.md5(subtitle.encode()).hexdigest()[:8]
         
         # 保存状态
-        persistence.save_state(dict(state), conversation_id)
+        persistence.save_state(dict(state), conversation_id,"outputs/content")
         print("✓ 对话状态已保存")
         state["saved_file_path"] = "saved"
     except Exception as e:

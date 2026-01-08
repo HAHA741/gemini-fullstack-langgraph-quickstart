@@ -112,6 +112,7 @@ const Chat = () => {
         },
       ];
       thread.submit({
+        description:submittedInputValue,
         messages: newMessages,
         subtitle_text: "",
         core_topic: "",

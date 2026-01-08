@@ -9,7 +9,7 @@ interface ChatConfirmProps {
 const ChatConfirm = ({ topics, onConfirm }: ChatConfirmProps) => {
   const [cTopic, setCTopic] = useState("");
   return (
-    <>
+    <Container>
       <Wrapper>
         {topics?.map((topic, index) => (
           <div
@@ -24,44 +24,65 @@ const ChatConfirm = ({ topics, onConfirm }: ChatConfirmProps) => {
 
       <Footer>
         <Button
-        style={{width:"100%"}}
-          onClick={() => {
-            onConfirm(cTopic);
-          }}
+          style={{ width: "100%" }}
+          disabled={!cTopic}
+          onClick={() => onConfirm(cTopic)}
         >
           确认
         </Button>
       </Footer>
-    </>
+    </Container>
   );
 };
 
 export default ChatConfirm;
 
+const Container = styled.div`
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+`;
+
 const Wrapper = styled.div`
-  position: relative;
   display: flex;
   flex-direction: column;
-  height: 400px;
+  max-height: 360px;
   overflow-y: auto;
-  gap: 15px;
-  padding-bottom: 50px;
+  gap: 12px;
+  padding: 16px;
+
+  color: #1f2937; /* 更接近正文黑 */
+
   .item {
-    border-radius: 5px;
-    padding: 10px;
-    background: #f5f5f5;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #f7f7f8;
     cursor: pointer;
+    line-height: 1.5;
+    font-size: 14px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #ededee;
+    }
   }
+
   .item.active {
-    color: #fff;
-    background: rgba(0, 0, 0, 0.8);
+    background: #111827;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 `;
+
 const Footer = styled.div`
+  position: sticky;
+  bottom: 0;
+
+  padding: 12px 16px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+
   display: flex;
   justify-content: flex-end;
-  padding: 10px;
-//   position: absolute;
-//   bottom: 0;
-  width: 100%;
 `;

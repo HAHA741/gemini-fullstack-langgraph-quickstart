@@ -51,7 +51,7 @@ class StatePersistence:
                     serialized[key] = str(value)
         return serialized
     
-    def save_state(self, state: Dict[str, Any], conversation_id: str = None) -> str:
+    def save_state(self, state: Dict[str, Any], conversation_id: str = None,save_dir: str = None) -> str:
         """
         保存对话状态到文件
         
@@ -62,6 +62,8 @@ class StatePersistence:
         Returns:
             保存的文件路径
         """
+        output_dir = Path(save_dir) if save_dir else self.output_dir
+        output_dir.mkdir(parents=True, exist_ok=True)
         # 生成文件名
         if conversation_id is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
@@ -70,7 +72,7 @@ class StatePersistence:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"conversation_{conversation_id}_{timestamp}.json"
         
-        filepath = self.output_dir / filename
+        filepath = output_dir / filename
         
         # 序列化状态
         serialized_state = self._serialize_state(state)

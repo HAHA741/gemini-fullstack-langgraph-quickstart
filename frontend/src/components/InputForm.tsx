@@ -22,7 +22,7 @@ import { getSrtList, uploadSrt } from "@/lib/api";
 
 // Updated InputFormProps
 interface InputFormProps {
-  onSubmit: (inputValue: string, effort: string, model: string) => void;
+  onSubmit: (input:any) => void;
   onCancel: () => void;
   isLoading: boolean;
   hasHistory: boolean;
@@ -52,7 +52,7 @@ export const InputForm: React.FC<InputFormProps> = ({
   const handleInternalSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     // if (!internalInputValue.trim()) return;
-    onSubmit(internalInputValue, effort, srt);
+    onSubmit({content:internalInputValue,srt});
     setInternalInputValue("");
   };
 

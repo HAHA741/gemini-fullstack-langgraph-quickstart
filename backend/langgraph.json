@@ -4,7 +4,8 @@
     "agent": "./src/agent/graph.py:graph",
     "excelAgent": "./src/excelAgent/graph.py:graph",
     "contentAgent": "./src/contentAgent/graph.py:graph",
-    "xiaohongshuAgent":"./src/xiaohongshuAgent/graph.py:graph"
+    "xiaohongshuAgent":"./src/xiaohongshuAgent/graph.py:graph",
+    "comicsAgent":"./src/comicsAgent/graph.py:graph"
   },
   "app": "./src/agent/app.py:app",
   "env": ".env"

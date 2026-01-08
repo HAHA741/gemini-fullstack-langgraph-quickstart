@@ -8,6 +8,7 @@ from pathlib import Path
 import contentAgent
 import time
 from xiaohongshuAgent.state import ContentState
+import json
 from xiaohongshuAgent.prompts import (
 
     xiaohongshu_topic_prompt,
@@ -36,9 +37,18 @@ def generate_topic(state:ContentState)->ContentState:
         result = structured_llm.invoke(prompt)
         print("✓ 选题生成完成",str(result))
         # 假设返回的是多个标题，处理为列表
-        topics = result.topics if hasattr(result, 'topics') else str(result)
+        if not hasattr(result, "topics") or not result.topics:
+            raise ValueError("StoryboardResult 中未返回有效 topics")
+        topics = result.topics 
         state["topics"] = topics
-        state["messages"] = AIMessage(content=result.topics)
+        state["messages"] = AIMessage(content=json.dumps(
+        {
+            "topics": topics,
+            "type": "select",
+            "options": {}
+        },
+        ensure_ascii=False
+    ))
     except Exception as e:
         print(f"✗ 选题生成失败: {str(e)}")
     return state
@@ -70,7 +80,7 @@ def save_conversation_state(state: ContentState) -> ContentState:
         conversation_id = hashlib.md5(selected_topic.encode()).hexdigest()[:8]
         
         # 保存状态
-        persistence.save_state(dict(state), conversation_id)
+        persistence.save_state(dict(state), conversation_id,"outputs/小红书")
         print("✓ 对话状态已保存")
         state["saved_file_path"] = "saved"
     except Exception as e:

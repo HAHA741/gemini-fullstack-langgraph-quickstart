@@ -1,10 +1,9 @@
+import AISender from "./AISender";
 import { InputForm } from "./InputForm";
 
 interface WelcomeScreenProps {
   handleSubmit: (
-    submittedInputValue: string,
-    effort: string,
-    model: string
+   input:any
   ) => void;
   onCancel: () => void;
   isLoading: boolean;
@@ -27,12 +26,13 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       </p>
     </div>
     <div className="w-full mt-4">
-      <InputForm
+      <AISender onSubmit={handleSubmit}/>
+      {/* <InputForm
         onSubmit={handleSubmit}
         isLoading={isLoading}
         onCancel={onCancel}
         hasHistory={false}
-      />
+      /> */}
     </div>
     <p className="text-xs text-neutral-500">
       Powered by Google Gemini and LangChain LangGraph.

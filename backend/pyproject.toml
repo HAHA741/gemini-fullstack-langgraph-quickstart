@@ -24,7 +24,8 @@ dependencies = [
     "tabulate",
     "pysrt",
     "uvicorn[standard]",
-    "python-multipart"
+    "python-multipart",
+    "langchain_openai"
 ]
 
 
